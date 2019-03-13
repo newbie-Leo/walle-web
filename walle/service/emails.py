@@ -1,5 +1,6 @@
 """ This file contains email sending functions for Flask-User.
-    It uses Jinja2 to render email subject and email message. It uses Flask-Mail to send email.
+    It uses Jinja2 to render email subject and email message.
+    It uses Flask-Mail to send email.
 
     :copyright: (c) 2013 by Ling Thio
     :author: Ling Thio (ling.thio@gmail.com)
@@ -35,7 +36,10 @@ def send_email(recipient, subject, html_message, text_message):
     # Make sure that Flask-Mail has been initialized
     mail_engine = mail
     if not mail_engine:
-        return 'Flask-Mail has not been initialized. Initialize Flask-Mail or disable USER_SEND_PASSWORD_CHANGED_EMAIL, USER_SEND_REGISTERED_EMAIL and USER_SEND_USERNAME_CHANGED_EMAIL'
+        return 'Flask-Mail has not been initialized. \
+        Initialize Flask-Mail or disable \
+        USER_SEND_PASSWORD_CHANGED_EMAIL, \
+        USER_SEND_REGISTERED_EMAIL and USER_SEND_USERNAME_CHANGED_EMAIL'
 
     try:
 
@@ -47,10 +51,14 @@ def send_email(recipient, subject, html_message, text_message):
         return mail.send(message)
 
     # Print helpful error messages on exceptions
-    except (socket.gaierror, socket.error) as e:
-        return 'SMTP Connection error: Check your MAIL_SERVER and MAIL_PORT settings.'
+    except socket.gaierror, socket.error:
+        return 'SMTP Connection error: Check your \
+                MAIL_SERVER and MAIL_PORT settings.'
     except smtplib.SMTPAuthenticationError:
-        return 'SMTP Authentication error: Check your MAIL_USERNAME and MAIL_PASSWORD settings.'
+        return 'SMTP Authentication error: \
+                Check your MAIL_USERNAME and MAIL_PASSWORD settings.'
+    except Exception:
+        return "UNKNOWN ERROR"
 
 
 def get_primary_user_email(user):
@@ -68,8 +76,11 @@ def get_primary_user_email(user):
 def send_confirm_email_email(user, user_email, confirm_email_link):
     # Verify certain conditions
     user_manager = current_app.user_manager
-    if not user_manager.enable_email: return
-    if not user_manager.send_registered_email and not user_manager.enable_confirm_email: return
+    if not user_manager.enable_email:
+        return
+    if not user_manager.send_registered_email \
+            and not user_manager.enable_confirm_email:
+        return
 
     # Retrieve email address from User or UserEmail object
     email = user_email.email if user_email else user.email
@@ -77,13 +88,14 @@ def send_confirm_email_email(user, user_email, confirm_email_link):
 
     # Render subject, html message and text message
     subject, html_message, text_message = _render_email(
-            user_manager.confirm_email_email_template,
-            user=user,
-            app_name=user_manager.app_name,
-            confirm_email_link=confirm_email_link)
+        user_manager.confirm_email_email_template,
+        user=user,
+        app_name=user_manager.app_name,
+        confirm_email_link=confirm_email_link)
 
     # Send email message using Flask-Mail
-    user_manager.send_email_function(email, subject, html_message, text_message)
+    user_manager.send_email_function(
+        email, subject, html_message, text_message)
 
 
 def send_registered_email(user, confirm_email_link):  # pragma: no cover
@@ -98,10 +110,10 @@ def send_registered_email(user, confirm_email_link):  # pragma: no cover
 
     # Render subject, html message and text message
     subject, html_message, text_message = _render_email(
-            'emails/registered',
-            user=user,
-            app_name='walle',
-            confirm_email_link=confirm_email_link)
+        'emails/registered',
+        user=user,
+        app_name='walle',
+        confirm_email_link=confirm_email_link)
 
     # Send email message using Flask-Mail
     return send_email(email, subject, html_message, text_message)
@@ -112,7 +124,8 @@ def public_send_registered_email(user, require_email_confirmation=True):
     # Generate confirm email link
     token_manager = tokens.TokenManager()
     token = token_manager.generate_token(int(user.id))
-    confirm_email_link = url_for('deploy.confirm_mail', token=token, _external=True)
+    confirm_email_link = url_for(
+        'deploy.confirm_mail', token=token, _external=True)
 
     # Send email
     return send_registered_email(user, confirm_email_link)
